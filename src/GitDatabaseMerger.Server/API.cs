@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AustinHarris.JsonRpc;
 using GitDatabaseMerger.Interop;
 
@@ -6,13 +7,17 @@ namespace GitDatabaseMerger
 {
     public class MergeAPI : JsonRpcService
     {
-        [JsonRpcMethod]
-        public MergeResult Merge(string local, string remote, string ancestor)
+        private IMerger Merger { get; }
+
+        public MergeAPI(IMerger merger)
         {
-            Console.WriteLine($"Local: {local}");
-            Console.WriteLine($"Remote: {remote}");
-            Console.WriteLine($"Ancestor: {ancestor}");
-            return MergeResult.Success;
+            Merger = merger;
+        }
+
+        [JsonRpcMethod]
+        public async Task<MergeResult> Merge(string local, string remote, string ancestor)
+        {
+            return await Merger.Merge(local, remote, ancestor);
         }
     }
 }

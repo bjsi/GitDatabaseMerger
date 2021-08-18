@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GitDatabaseMerger.Client.Helpers
+namespace GitDatabaseMerger.Client.TestConsole.Helpers
 {
     public static class EnumEx
     {

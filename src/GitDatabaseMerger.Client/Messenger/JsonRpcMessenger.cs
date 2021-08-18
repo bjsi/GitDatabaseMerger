@@ -6,10 +6,16 @@ using System.Text;
 
 namespace GitDatabaseMerger.Client.Messenger
 {
-    public class JsonMessenger
+    public class JsonRpcMessenger
     {
-        private string Hostname { get; } = "127.0.0.1";
-        private int Port { get; } = 8090;
+        private string Hostname { get; }
+        private int Port { get; }
+
+        public JsonRpcMessenger(string hostname, int port)
+        {
+            this.Hostname = hostname;
+            this.Port = port;
+        }
 
         public T SendRequest<T>(string method, params object[] args) where T : JsonResponse
         {

@@ -5,22 +5,33 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using AustinHarris.JsonRpc;
+using GitDatabaseMerger.Interop;
 
 namespace GitDatabaseMerger
 {
-    public class JsonRpcServer
+    public class MergeRequestListener : IDisposable
     {
-        public bool HasExited { get; set; }
         private TcpListener Server { get; set; }
-        private MergeAPI Service { get; set; } = new MergeAPI();
-        private const int Port = 8090;
+        private MergeAPI MergeAPI { get; }
+        private string Hostname { get; }
+        private int Port { get; }
+
+        public MergeRequestListener(string hostname, int port, IMerger merger)
+        {
+            this.Hostname = hostname;
+            this.Port = port;
+            this.MergeAPI = new MergeAPI(merger);
+        }
+
+        ~MergeRequestListener()
+        {
+            Dispose();
+        }
 
         public async Task StartAsync()
         {
-            Server = new TcpListener(IPAddress.Parse("127.0.0.1"), Port);
+            Server = new TcpListener(IPAddress.Parse(Hostname), Port);
             Server.Start();
-            while (!HasExited)
-            {
                 try
                 {
                     using (var client = await Server.AcceptTcpClientAsync())
@@ -49,10 +60,12 @@ namespace GitDatabaseMerger
                 {
                     Console.WriteLine("Caught exception: " + e.Message);
                 }
-            }
+        }
 
+        public void Dispose()
+        {
             Console.WriteLine("Stopping JsonRpcServer");
-            Server.Stop();
+            Server?.Stop();
         }
     }
 }
