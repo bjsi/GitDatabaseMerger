@@ -5,12 +5,12 @@ using System.Linq;
 
 namespace GitDatabaseMerger.Server.Tests.Data
 {
-    public class MyContext : DbContext
+    public class TestDbContext : DbContext
     {
         public DbSet<SimpleBook> Books { get; set; }
         // public DbSet<Author> Authors { get; set; }
 
-        public MyContext(DbContextOptions<MyContext> options) : base(options)
+        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options)
         {
         }
 

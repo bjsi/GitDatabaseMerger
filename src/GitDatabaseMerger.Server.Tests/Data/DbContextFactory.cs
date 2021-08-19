@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests.Data
 {
-    public class SampleDbContextFactory : IDisposable
+    public class TestDbContextFactory : IDisposable
     {
         private DbConnection _connection;
 
-        private DbContextOptions<MyContext> CreateOptions()
+        private DbContextOptions<TestDbContext> CreateOptions()
         {
-            return new DbContextOptionsBuilder<MyContext>()
+            return new DbContextOptionsBuilder<TestDbContext>()
                 .UseSqlite(_connection).Options;
         }
 
-        public MyContext CreateContext()
+        public TestDbContext CreateContext()
         {
             if (_connection == null)
             {
@@ -27,13 +27,13 @@ namespace GitDatabaseMerger.Server.Tests.Data
                 _connection.Open();
 
                 var options = CreateOptions();
-                using (var context = new MyContext(options))
+                using (var context = new TestDbContext(options))
                 {
                     context.Database.EnsureCreated();
                 }
             }
 
-            return new MyContext(CreateOptions());
+            return new TestDbContext(CreateOptions());
         }
 
         public void Dispose()

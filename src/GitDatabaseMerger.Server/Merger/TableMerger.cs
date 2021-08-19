@@ -49,7 +49,7 @@ namespace GitDatabaseMerger.Server.Merger
         public async Task<MergeResult> Merge()
         {
             var results = new List<MergeResult>();
-            var merged = new HashSet<object[]>();
+            var merged = new List<object[]>();
             foreach (var localRow in LocalDB.GetAll())
             {
                 object[] localRowKey = LocalDB.KeysOf(localRow);
@@ -64,7 +64,7 @@ namespace GitDatabaseMerger.Server.Merger
             foreach (var remoteRow in RemoteDB.GetAll())
             {
                 object[] remoteRowKey = RemoteDB.KeysOf(remoteRow);
-                if (merged.Contains(remoteRowKey))
+                if (merged.Any(x => x.SequenceEqual(remoteRowKey)))
                     continue;
 
                 var localRow = await LocalDB.FindByKeysAsync(remoteRowKey);

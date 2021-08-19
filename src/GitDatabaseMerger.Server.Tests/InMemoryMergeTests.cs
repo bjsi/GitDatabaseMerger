@@ -1,10 +1,9 @@
-﻿using CliWrap;
+﻿using GitDatabaseMerger.Server.Data;
 using GitDatabaseMerger.Server.Tests.Data;
-using GitDatabaseMerger.Server.Tests.Helpers;
+using GitDatabaseMerger.Server.Tests.Merger;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -13,27 +12,125 @@ namespace GitDatabaseMerger.Server.Tests
     public class InMemoryMergeTests
     {
         [Fact]
-        public async Task TestAddedRow()
+        public async Task TestAllDbsAreEmpty()
         {
-            using (var factory = new SampleDbContextFactory())
+            using (var localFactory = new TestDbContextFactory())
+            using (var remoteFactory = new TestDbContextFactory())
+            using (var ancestorFactory = new TestDbContextFactory())
             {
-                // Get a context
-                using (var context = factory.CreateContext())
+                using (var localContext = localFactory.CreateContext())
+                using (var remoteContext = remoteFactory.CreateContext())
+                using (var ancestorContext = ancestorFactory.CreateContext())
                 {
-                    var dt = DateTime.UtcNow;
-                    var user = new SimpleBook() { Title = "Cool Book", CreatedAt = dt, UpdatedAt = dt};
-                    context.Books.Add(user);
-                    await context.SaveChangesAsync();
+                    var merger = new SimpleBookMerger(localContext,
+                                                      remoteContext,
+                                                      ancestorContext,
+                                                      x => x.CreatedAt,
+                                                      x => x.UpdatedAt,
+                                                      DateTime.MinValue);
+
+                    var res = await merger.Merge();
+
+                    Assert.Equal(Interop.MergeResult.Success, res);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task TestRemoteAddedRow()
+        {
+            var dt = DateTime.UtcNow;
+            var book1 = new SimpleBook() { Title = "Cool Book", CreatedAt = dt, UpdatedAt = dt };
+
+            var dt2 = dt.AddSeconds(5);
+            var book2 = new SimpleBook() { Title = "Cool Book 2", CreatedAt = dt2, UpdatedAt = dt2 };
+
+            using (var localFactory = new TestDbContextFactory())
+            using (var remoteFactory = new TestDbContextFactory())
+            using (var ancestorFactory = new TestDbContextFactory())
+            {
+                using (var context = localFactory.CreateContext())
+                {
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book1);
                 }
 
-                // Get another context using the same connection
-                using (var context = factory.CreateContext())
+                using (var context = remoteFactory.CreateContext())
                 {
-                    var count = await context.Books.CountAsync();
-                    Assert.Equal(1, count);
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book1);
+                    await repo.CreateAsync(book2);
+                }
 
-                    var b = await context.Books.FirstOrDefaultAsync(book => book.Title == "Cool Book");
-                    Assert.NotNull(b);
+                using (var context = ancestorFactory.CreateContext())
+                {
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book1);
+                }
+
+                using (var localContext = localFactory.CreateContext())
+                using (var remoteContext = remoteFactory.CreateContext())
+                using (var ancestorContext = ancestorFactory.CreateContext())
+                {
+                    var merger = new SimpleBookMerger(localContext,
+                                                      remoteContext,
+                                                      ancestorContext,
+                                                      x => x.CreatedAt,
+                                                      x => x.UpdatedAt,
+                                                      dt);
+
+                    var res = await merger.Merge();
+                    Assert.Equal(Interop.MergeResult.Success, res);
+
+                    var repo = new GenericRepository<SimpleBook>(localContext);
+                    var all = await repo.GetAll().ToListAsync();
+                    Assert.Equal(2, all.Count);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task TestAllDbsAreTheSame()
+        {
+            var dt = DateTime.UtcNow;
+            var book = new SimpleBook() { Title = "Cool Book", CreatedAt = dt, UpdatedAt = dt };
+
+            using (var localFactory = new TestDbContextFactory())
+            using (var remoteFactory = new TestDbContextFactory())
+            using (var ancestorFactory = new TestDbContextFactory())
+            {
+
+                using (var context = localFactory.CreateContext())
+                {
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book);
+                }
+
+                using (var context = remoteFactory.CreateContext())
+                {
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book);
+                }
+
+                using (var context = ancestorFactory.CreateContext())
+                {
+                    var repo = new GenericRepository<SimpleBook>(context);
+                    await repo.CreateAsync(book);
+                }
+
+                using (var localContext = localFactory.CreateContext())
+                using (var remoteContext = remoteFactory.CreateContext())
+                using (var ancestorContext = ancestorFactory.CreateContext())
+                {
+                    var merger = new SimpleBookMerger(localContext,
+                                                      remoteContext,
+                                                      ancestorContext,
+                                                      x => x.CreatedAt,
+                                                      x => x.UpdatedAt,
+                                                      dt);
+
+                    var res = await merger.Merge();
+                    Assert.Equal(Interop.MergeResult.Success, res);
                 }
             }
         }
