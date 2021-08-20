@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests.Models
 {
-    public class BaseEntity
+    public class BookBase
     {
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

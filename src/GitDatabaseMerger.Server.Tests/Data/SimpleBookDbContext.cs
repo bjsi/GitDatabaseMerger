@@ -5,19 +5,17 @@ using System.Linq;
 
 namespace GitDatabaseMerger.Server.Tests.Data
 {
-    public class TestDbContext : DbContext
+    public class SimpleBookDbContext : DbContext
     {
         public DbSet<SimpleBook> Books { get; set; }
-        // public DbSet<Author> Authors { get; set; }
 
-        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options)
+        public SimpleBookDbContext(DbContextOptions<SimpleBookDbContext> options) : base(options)
         {
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Book>().ToTable("Books");
-            modelBuilder.Entity<Author>().ToTable("Authors");
+            modelBuilder.Entity<SimpleBook>().ToTable("Books");
         }
 
         //public override int SaveChanges()

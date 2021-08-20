@@ -13,13 +13,13 @@ namespace GitDatabaseMerger.Server.Tests.Data
     {
         private DbConnection _connection;
 
-        private DbContextOptions<TestDbContext> CreateOptions()
+        private DbContextOptions<SimpleBookDbContext> CreateOptions()
         {
-            return new DbContextOptionsBuilder<TestDbContext>()
+            return new DbContextOptionsBuilder<SimpleBookDbContext>()
                 .UseSqlite(_connection).Options;
         }
 
-        public TestDbContext CreateContext()
+        public SimpleBookDbContext CreateContext()
         {
             if (_connection == null)
             {
@@ -27,13 +27,13 @@ namespace GitDatabaseMerger.Server.Tests.Data
                 _connection.Open();
 
                 var options = CreateOptions();
-                using (var context = new TestDbContext(options))
+                using (var context = new SimpleBookDbContext(options))
                 {
                     context.Database.EnsureCreated();
                 }
             }
 
-            return new TestDbContext(CreateOptions());
+            return new SimpleBookDbContext(CreateOptions());
         }
 
         public void Dispose()

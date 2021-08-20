@@ -21,7 +21,9 @@ namespace GitDatabaseMerger.Server.Data
             var entry = _dbContext.Entry(entity);
             var keyProperties = KeyPropertiesByEntityType.GetOrAdd(
                 entity.GetType(),
-                t => entry.Metadata.FindPrimaryKey().Properties.Select(property => property.Name).ToArray());
+                t => entry.Metadata.FindPrimaryKey().Properties
+                                   .Select(property => property.Name)
+                                   .ToArray());
 
             var keyParts = keyProperties
                 .Select(propertyName => entry.Property(propertyName).CurrentValue)
@@ -47,8 +49,8 @@ namespace GitDatabaseMerger.Server.Data
         {
             try
             {
-                var entity = await FindByKeysAsync(keys);
-                _dbContext.Set<TEntity>().Remove(entity);
+                var e = await _dbContext.FindAsync<TEntity>(keys);
+                _dbContext.Set<TEntity>().Remove(e);
                 return (await _dbContext.SaveChangesAsync()) == 1;
             }
             catch (DbUpdateException)

@@ -28,14 +28,14 @@ namespace GitDatabaseMerger.Server.Merger
         private Func<TEntity, DateTime> GetUpdatedAt { get; }
         private DateTime LastSuccessfulMerge { get; }
 
-        public TableMergerBase(DbContext local,
+        public TableMergerBase(DbContext localContext,
                                DbContext remote,
                                DbContext ancestor,
                                Func<TEntity, DateTime> getCreatedAt,
                                Func<TEntity, DateTime> getUpdatedAt,
                                DateTime lastSuccessfulMerge)
         {
-            LocalContext = local;
+            LocalContext = localContext;
             RemoteContext = remote;
             AncestorContext = ancestor;
             GetCreatedAt = getCreatedAt;
@@ -48,32 +48,38 @@ namespace GitDatabaseMerger.Server.Merger
 
         public async Task<MergeResult> Merge()
         {
-            var results = new List<MergeResult>();
-            var merged = new List<object[]>();
+            var mergeResults = new List<MergeResult>();
+            var mergedPrimaryKeys = new KTrie.Trie<object, object[]>();
             foreach (var localRow in LocalDB.GetAll())
             {
                 object[] localRowKey = LocalDB.KeysOf(localRow);
-
-                var remoteRow = await RemoteDB.FindByKeysAsync(localRowKey);
-                var ancestorRow = await AncestorDB.FindByKeysAsync(localRowKey);
+                var remoteRowTask = RemoteDB.FindByKeysAsync(localRowKey);
+                var ancestorRowTask = AncestorDB.FindByKeysAsync(localRowKey);
+                var remoteRow = await remoteRowTask;
+                var ancestorRow = await ancestorRowTask;
                 var result = await CompareRows(localRow, remoteRow, ancestorRow);
-                merged.Add(RemoteDB.KeysOf(remoteRow));
-                results.Add(result);
+                if (remoteRow != null)
+                {
+                    mergedPrimaryKeys.Add(localRowKey, localRowKey);
+                }
+                mergeResults.Add(result);
             }
 
             foreach (var remoteRow in RemoteDB.GetAll())
             {
                 object[] remoteRowKey = RemoteDB.KeysOf(remoteRow);
-                if (merged.Any(x => x.SequenceEqual(remoteRowKey)))
+                if (mergedPrimaryKeys.TryGetValue(remoteRowKey, out _))
                     continue;
 
-                var localRow = await LocalDB.FindByKeysAsync(remoteRowKey);
-                var ancestorRow = await LocalDB.FindByKeysAsync(remoteRowKey);
+                var localRowTask = LocalDB.FindByKeysAsync(remoteRowKey);
+                var ancestorRowTask = AncestorDB.FindByKeysAsync(remoteRowKey);
+                var localRow = await localRowTask;
+                var ancestorRow = await ancestorRowTask;
                 var result = await CompareRows(localRow, remoteRow, ancestorRow);
-                results.Add(result);
+                mergeResults.Add(result);
             }
 
-            return results.All(x => x == MergeResult.Success)
+            return mergeResults.All(x => x == MergeResult.Success)
                 ? MergeResult.Success
                 : MergeResult.FailedWithUnresolvedConflict;
         }
@@ -140,7 +146,8 @@ namespace GitDatabaseMerger.Server.Merger
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
         public virtual async Task<MergeResult> HandleDeletedRow(TEntity localRow)
         {
-            return (await LocalDB.DeleteAsync(localRow))
+            var keys = LocalDB.KeysOf(localRow);
+            return (await LocalDB.DeleteAsync(keys))
                 ? MergeResult.Success
                 : MergeResult.FailedWithUnresolvedConflict;
         }
