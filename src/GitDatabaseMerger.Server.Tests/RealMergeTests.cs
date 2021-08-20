@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests
 {
-    class RealMergeTests
+    public class RealMergeTests
     {
     }
 }

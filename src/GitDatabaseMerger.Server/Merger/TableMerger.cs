@@ -12,6 +12,8 @@ namespace GitDatabaseMerger.Server.Merger
     public abstract class TableMergerBase<TEntity> where TEntity : class
     {
 
+        protected abstract HashSet<string> IgnoreChangedPropertyNames { get; }
+
         //
         // Database Contexts
         protected DbContext LocalContext { get; }
@@ -90,19 +92,19 @@ namespace GitDatabaseMerger.Server.Merger
             // The row was created at a time > the last successful merge time.
             if ((remoteRow != null && localRow == null && ancestorRow == null) && GetCreatedAt(remoteRow) > LastSuccessfulMerge)
             {
-                return await HandleAddedRow(remoteRow);
+                return await HandleAdded(remoteRow);
             }
             // Row exists in the local and ancestor DBs, but does not exist in the remote DB.
             else if (localRow != null && ancestorRow != null && remoteRow == null)
             {
-                return await HandleDeletedRow(localRow);
+                return await HandleDeleted(localRow);
             }
             // Row exists in all 3 DBs (local, remote, ancestor)
             // The remote row was updated at a time > the last successful merge time.
             else if ((localRow != null && ancestorRow != null && remoteRow != null) && GetUpdatedAt(remoteRow) > LastSuccessfulMerge)
             {
-                var propertyInfos = GetChangedProperties(localRow, remoteRow);
-                return await HandleChangedRow(localRow, remoteRow, propertyInfos);
+                var propertyInfos = GetChangedProps(localRow, remoteRow);
+                return await HandleChanged(localRow, remoteRow, propertyInfos);
             }
             else
             {
@@ -110,13 +112,14 @@ namespace GitDatabaseMerger.Server.Merger
             }
         }
 
-        // TODO: probably wrong
-        private IEnumerable<PropertyInfo> GetChangedProperties(TEntity localRow, TEntity remoteRow)
+        private IEnumerable<PropertyInfo> GetChangedProps(TEntity localRow, TEntity remoteRow)
         {
             var changed = new List<PropertyInfo>();
-            foreach (var prop in localRow.GetType().GetProperties())
+            foreach (var prop in localRow.GetType().GetProperties().Where(x => !IgnoreChangedPropertyNames.Contains(x.Name)))
             {
-                if (prop.GetValue(localRow, null) != prop.GetValue(remoteRow, null))
+                var localProp = prop.GetValue(localRow, null);
+                var remoteProp = prop.GetValue(remoteRow, null);
+                if (!localProp.Equals(remoteProp))
                 {
                     changed.Add(prop);
                 }
@@ -131,7 +134,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Add the row to the local database.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleAddedRow(TEntity remoteRow)
+        public virtual async Task<MergeResult> HandleAdded(TEntity remoteRow)
         {
             return (await LocalDB.CreateAsync(remoteRow))
                 ? MergeResult.Success
@@ -144,7 +147,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Delete the row from the local database.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleDeletedRow(TEntity localRow)
+        public virtual async Task<MergeResult> HandleDeleted(TEntity localRow)
         {
             var keys = LocalDB.KeysOf(localRow);
             return (await LocalDB.DeleteAsync(keys))
@@ -160,7 +163,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Merge the row that was updated most recently.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleChangedRow(TEntity localRow, TEntity remoteRow, IEnumerable<PropertyInfo> propertyInfos)
+        public virtual async Task<MergeResult> HandleChanged(TEntity localRow, TEntity remoteRow, IEnumerable<PropertyInfo> propertyInfos)
         { 
             return (await LocalDB.UpdateAsync(GetUpdatedAt(localRow) > GetUpdatedAt(remoteRow) ? localRow : remoteRow))
                 ? MergeResult.Success
