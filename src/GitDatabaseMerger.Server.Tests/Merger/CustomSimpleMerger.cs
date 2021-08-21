@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests.Merger
 {
-    public class CustomSimpleBookMerger : TableMergerBase<SimpleBook>
+    public class CustomSimpleMerger : TableMergerBase<SimpleBook>
     {
-        public CustomSimpleBookMerger(DbContext localContext,
+        public CustomSimpleMerger(DbContext localContext,
                                       DbContext remote,
                                       DbContext ancestor,
                                       Func<SimpleBook, DateTime> getCreatedAt,
@@ -31,7 +31,7 @@ namespace GitDatabaseMerger.Server.Tests.Merger
         {
             foreach (var prop in propertyInfos)
             {
-                if (prop.Name == "Title")
+                if (prop.Name == nameof(SimpleBook.Title))
                 {
                     return await HandleChangedTitle(localRow, remoteRow);
                 }

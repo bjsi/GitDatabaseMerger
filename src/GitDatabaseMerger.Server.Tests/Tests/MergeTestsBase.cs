@@ -1,11 +1,10 @@
 ﻿using GitDatabaseMerger.Server.Data;
 using GitDatabaseMerger.Server.Tests.Data;
-using GitDatabaseMerger.Server.Tests.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GitDatabaseMerger.Server.Tests
+namespace GitDatabaseMerger.Server.Tests.Tests
 {
     public abstract class MergeTestsBase : IDisposable
     {

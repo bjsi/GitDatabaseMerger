@@ -1,16 +1,15 @@
 ﻿using GitDatabaseMerger.Server.Data;
 using GitDatabaseMerger.Server.Tests.Merger;
 using GitDatabaseMerger.Server.Tests.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace GitDatabaseMerger.Server.Tests
+namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
 {
-    public class InMemoryCustomSimpleBookMergeTests : MergeTestsBase
+    public class CustomSimpleMergeTests : MergeTestsBase
     {
         [Fact]
         public async Task TestChangedRow()
@@ -29,7 +28,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new CustomSimpleBookMerger(localContext,
+                var merger = new CustomSimpleMerger(localContext,
                                                         remoteContext,
                                                         ancestorContext,
                                                         x => x.CreatedAt,

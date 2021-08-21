@@ -23,11 +23,6 @@ namespace GitDatabaseMerger
             this.MergeAPI = new MergeAPI(merger);
         }
 
-        ~MergeRequestListener()
-        {
-            Dispose();
-        }
-
         public async Task StartAsync()
         {
             Server = new TcpListener(IPAddress.Parse(Hostname), Port);
@@ -44,10 +39,10 @@ namespace GitDatabaseMerger
                         {
 
                             var line = await reader.ReadLineAsync();
-                            Console.WriteLine("Received request from client: " + line);
+                            Console.WriteLine("Received Request: " + line);
 
                             var response = await JsonRpcProcessor.Process(line);
-                            Console.WriteLine("Sent response to client: " + response);
+                            Console.WriteLine("Sent Response: " + response);
 
                             await writer.WriteLineAsync(response);
                             await writer.FlushAsync();
@@ -58,13 +53,13 @@ namespace GitDatabaseMerger
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Caught exception: " + e.Message);
+                    Console.WriteLine($"JSON RPC Server caught exception: {e}");
                 }
         }
 
         public void Dispose()
         {
-            Console.WriteLine("Stopping JsonRpcServer");
+            Console.WriteLine("Stopping the JSON RPC Server");
             Server?.Stop();
         }
     }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace GitDatabaseMerger.Interop
+﻿namespace GitDatabaseMerger.Interop
 {
     public enum MergeResult
     {

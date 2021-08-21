@@ -3,6 +3,7 @@ using GitDatabaseMerger.Client.Models;
 using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Client.Messenger
 {
@@ -17,28 +18,31 @@ namespace GitDatabaseMerger.Client.Messenger
             this.Port = port;
         }
 
-        public T SendRequest<T>(string method, params object[] args) where T : JsonResponse
+        public async Task<T> SendRequestAsync<T>(string method, params object[] args) where T : JsonResponse
         {
-            var request = new JsonRequest(method, args);
+            var jsonRequest = new JsonRequest(method, args);
             try
             {
                 using (TcpClient client = new TcpClient(Hostname, Port))
                 using (NetworkStream stream = client.GetStream())
                 {
-                    var reqStr = request.ToString();
-                    byte[] requestBinary = Encoding.UTF8.GetBytes(reqStr + "\n");
-                    stream.Write(requestBinary, 0, requestBinary.Length);
-                    Console.WriteLine("Sent Message: " + reqStr);
+                    // Write request
+                    var requestString = jsonRequest.ToString();
+                    byte[] requestBinary = Encoding.UTF8.GetBytes(requestString + "\n");
+                    await stream.WriteAsync(requestBinary, 0, requestBinary.Length);
+                    Console.WriteLine("Sent Request: " + requestString);
+
+                    // Read response
                     var responseBinary = new byte[256];
-                    stream.Read(responseBinary, 0, responseBinary.Length);
+                    await stream.ReadAsync(responseBinary, 0, responseBinary.Length);
                     var resStr = Encoding.UTF8.GetString(responseBinary);
-                    Console.WriteLine("Received Message: " + resStr);
+                    Console.WriteLine("Received Response: " + resStr);
                     return HandleResponse<T>(resStr);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Failed to send a TCP request with exception {e}");
+                Console.WriteLine($"Failed to send a JSON RPC request with exception {e}");
             }
 
             return null;

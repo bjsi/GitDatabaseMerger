@@ -1,5 +1,6 @@
 ﻿using GitDatabaseMerger.Client.Models;
 using GitDatabaseMerger.Interop;
+using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Client.Messenger
 {
@@ -11,9 +12,9 @@ namespace GitDatabaseMerger.Client.Messenger
             Messenger = new JsonRpcMessenger(hostname, port);
         }
 
-        public MergeResult Merge(string local, string remote, string ancestor)
+        public async Task<MergeResult> MergeAsync(string local, string remote, string ancestor)
         {
-            var ret = Messenger.SendRequest<MergeResponse>("Merge", local, remote, ancestor);
+            var ret = await Messenger.SendRequestAsync<MergeResponse>("Merge", local, remote, ancestor);
             return ret == null
                 ? MergeResult.FailedWithAbort
                 : ret.Result;

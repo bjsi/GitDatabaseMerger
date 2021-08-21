@@ -9,10 +9,10 @@ using System.Text;
 
 namespace GitDatabaseMerger.Server.Tests.Merger
 {
-    public class SimpleBookMerger : TableMergerBase<SimpleBook>
+    public class SimpleMerger : TableMergerBase<SimpleBook>
     {
 
-        public SimpleBookMerger(DbContext local,
+        public SimpleMerger(DbContext local,
                                DbContext remote,
                                DbContext ancestor,
                                Func<SimpleBook, DateTime> getCreatedAt,

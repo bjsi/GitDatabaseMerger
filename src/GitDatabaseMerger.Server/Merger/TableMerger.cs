@@ -61,9 +61,7 @@ namespace GitDatabaseMerger.Server.Merger
                 var ancestorRow = await ancestorRowTask;
                 var result = await CompareRows(localRow, remoteRow, ancestorRow);
                 if (remoteRow != null)
-                {
                     mergedPrimaryKeys.Add(localRowKey, localRowKey);
-                }
                 mergeResults.Add(result);
             }
 

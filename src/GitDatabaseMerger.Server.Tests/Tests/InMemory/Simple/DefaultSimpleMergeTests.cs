@@ -1,5 +1,4 @@
 ﻿using GitDatabaseMerger.Server.Data;
-using GitDatabaseMerger.Server.Tests.Data;
 using GitDatabaseMerger.Server.Tests.Merger;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +7,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace GitDatabaseMerger.Server.Tests
+namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
 {
-    public class InMemorySimpleBookMergeTests : MergeTestsBase
+    public class DefaultSimpleMergeTests : MergeTestsBase
     {
         [Fact]
         public async Task TestAllDbsAreEmpty()
@@ -19,7 +18,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new SimpleBookMerger(localContext,
+                var merger = new SimpleMerger(localContext,
                                                   remoteContext,
                                                   ancestorContext,
                                                   x => x.CreatedAt,
@@ -51,7 +50,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new SimpleBookMerger(localContext,
+                var merger = new SimpleMerger(localContext,
                                                   remoteContext,
                                                   ancestorContext,
                                                   x => x.CreatedAt,
@@ -86,7 +85,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new SimpleBookMerger(localContext,
+                var merger = new SimpleMerger(localContext,
                                                   remoteContext,
                                                   ancestorContext,
                                                   x => x.CreatedAt,
@@ -119,7 +118,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new SimpleBookMerger(localContext,
+                var merger = new SimpleMerger(localContext,
                                                   remoteContext,
                                                   ancestorContext,
                                                   x => x.CreatedAt,
@@ -154,7 +153,7 @@ namespace GitDatabaseMerger.Server.Tests
             using (var remoteContext = RemoteFactory.CreateContext())
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
-                var merger = new SimpleBookMerger(localContext,
+                var merger = new SimpleMerger(localContext,
                                                   remoteContext,
                                                   ancestorContext,
                                                   x => x.CreatedAt,

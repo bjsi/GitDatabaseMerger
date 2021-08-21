@@ -8,8 +8,9 @@ namespace GitDatabaseMerger.Server.Data
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
     {
-        private readonly DbContext _dbContext;
-        private static readonly ConcurrentDictionary<Type, string[]> KeyPropertiesByEntityType = new ConcurrentDictionary<Type, string[]>();
+        private DbContext _dbContext { get; }
+
+        private ConcurrentDictionary<Type, string[]> PrimaryKeyPropertiesByEntityType { get; } = new ConcurrentDictionary<Type, string[]>();
 
         public GenericRepository(DbContext dbContext)
         {
@@ -19,7 +20,7 @@ namespace GitDatabaseMerger.Server.Data
         public object[] KeysOf(TEntity entity)
         {
             var entry = _dbContext.Entry(entity);
-            var keyProperties = KeyPropertiesByEntityType.GetOrAdd(
+            var keyProperties = PrimaryKeyPropertiesByEntityType.GetOrAdd(
                 entity.GetType(),
                 t => entry.Metadata.FindPrimaryKey().Properties
                                    .Select(property => property.Name)

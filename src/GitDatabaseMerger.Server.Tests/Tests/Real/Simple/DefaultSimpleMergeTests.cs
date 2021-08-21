@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GitDatabaseMerger.Server.Tests.Tests.Real.Simple
+{
+    public class DefaultSimpleMergeTests : MergeTestsBase
+    {
+        public DefaultSimpleMergeTests()
+        {
+        }
+    }
+}

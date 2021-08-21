@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests.Models
 {
-    public class SimpleBook : BookBase
+    public class SimpleBook : EntityBase
     {
         [Key]
         public int BookId { get; set; }

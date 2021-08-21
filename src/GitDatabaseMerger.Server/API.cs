@@ -15,9 +15,9 @@ namespace GitDatabaseMerger
         }
 
         [JsonRpcMethod]
-        public async Task<MergeResult> Merge(string local, string remote, string ancestor)
+        public async Task<MergeResult> MergeAsync(string local, string remote, string ancestor)
         {
-            return await Merger.Merge(local, remote, ancestor);
+            return await Merger.MergeAsync(local, remote, ancestor);
         }
     }
 }

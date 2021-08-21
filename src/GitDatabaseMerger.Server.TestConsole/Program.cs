@@ -4,6 +4,7 @@ using GitDatabaseMerger.Server.TestConsole.Data;
 using GitDatabaseMerger.Server.TestConsole.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.TestConsole
@@ -19,11 +20,13 @@ namespace GitDatabaseMerger.Server.TestConsole
             : base(local, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge)
         {
         }
+
+        protected override HashSet<string> IgnoreChangedPropertyNames => throw new NotImplementedException();
     }
 
     public class DBMerger : IMerger
     {
-        public async Task<MergeResult> Merge(string local, string remote, string ancestor)
+        public async Task<MergeResult> MergeAsync(string local, string remote, string ancestor)
         {
             var LocalContext = new MyContext(local);
             var RemoteContext = new MyContext(remote);
