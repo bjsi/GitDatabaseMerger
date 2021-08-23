@@ -11,7 +11,10 @@ namespace GitDatabaseMerger.Client.TestConsole
         static async Task<int> Main(string[] args)
         {
             if (args.Length != 3)
-                Console.WriteLine("args: local, remote, ancestor");
+            {
+                Console.WriteLine("Failed: Requires 3 args: local, remote, ancestor");
+                return await Task.FromResult(1);
+            }
 
             var hostname = "127.0.0.1";
             var port = 8090;

@@ -3,12 +3,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GitDatabaseMerger.Server.Tests.Data
 {
-    public class SimpleBookDbContext : DbContext
+    public class SimpleBookRealDbContext : DbContext
     {
         public DbSet<SimpleBook> Books { get; set; }
+        private string DatabasePath { get; }
 
-        public SimpleBookDbContext(DbContextOptions<SimpleBookDbContext> options) : base(options)
+        public SimpleBookRealDbContext(string databasePath)
         {
+            DatabasePath = databasePath;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlite($"Data Source={DatabasePath};");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

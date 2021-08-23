@@ -42,7 +42,7 @@ namespace GitDatabaseMerger.Server.TestConsole
                                                   (x) => x.UpdatedAt,
                                                   DateTime.MinValue);
 
-            var success = await tableMerger.Merge();
+            var success = await tableMerger.MergeAsync();
             return success;
         }
     }
@@ -55,8 +55,11 @@ namespace GitDatabaseMerger.Server.TestConsole
         static async Task Main(string[] args)
         {
             var merger = new DBMerger();
-            using (var listener = new MergeRequestListener(Hostname, Port, merger))
+            using (var listener = new MergeRequestListener(Hostname, Port))
+            {
+                listener.OnMergeRequest += (_, args) => merger.MergeAsync(args.Local, args.Remote, args.Ancestor);
                 await listener.StartAsync();
+            }
         }
     }
 }

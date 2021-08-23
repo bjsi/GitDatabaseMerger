@@ -48,8 +48,13 @@ namespace GitDatabaseMerger.Server.Merger
             LastSuccessfulMerge = lastSuccessfulMerge;
         }
 
-        public async Task<MergeResult> Merge()
+        public async Task<MergeResult> MergeAsync()
         {
+            // TODO: is this correct?
+            //await Task.WhenAll(LocalContext.Database.EnsureCreatedAsync(),
+            //                   RemoteContext.Database.EnsureCreatedAsync(),
+            //                   AncestorContext.Database.EnsureCreatedAsync());
+
             var mergeResults = new List<MergeResult>();
             var mergedPrimaryKeys = new KTrie.Trie<object, object[]>();
             foreach (var localRow in LocalDB.GetAll())
@@ -147,8 +152,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
         public virtual async Task<MergeResult> HandleDeleted(TEntity localRow)
         {
-            var keys = LocalDB.KeysOf(localRow);
-            return (await LocalDB.DeleteAsync(keys))
+            return (await LocalDB.DeleteAsync(localRow))
                 ? MergeResult.Success
                 : MergeResult.FailedWithUnresolvedConflict;
         }

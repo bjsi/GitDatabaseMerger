@@ -10,6 +10,6 @@ namespace GitDatabaseMerger.Server.Data
         Task<TEntity> FindByKeysAsync(params object[] keys);
         Task<bool> CreateAsync(TEntity entity);
         Task<bool> UpdateAsync(TEntity entity);
-        Task<bool> DeleteAsync(params object[] keys);
+        Task<bool> DeleteAsync(TEntity entity);
     }
 }

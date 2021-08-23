@@ -9,7 +9,7 @@ using Xunit;
 
 namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
 {
-    public class CustomSimpleMergeTests : MergeTestsBase
+    public class CustomSimpleMergeTests : InMemoryMergeTestsBase
     {
         [Fact]
         public async Task TestChangedRow()
@@ -35,7 +35,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                         x => x.UpdatedAt,
                                                         dt);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
 
                 var repo = new GenericRepository<SimpleBook>(localContext);

@@ -9,7 +9,7 @@ using Xunit;
 
 namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
 {
-    public class DefaultSimpleMergeTests : MergeTestsBase
+    public class DefaultSimpleMergeTests : InMemoryMergeTestsBase
     {
         [Fact]
         public async Task TestAllDbsAreEmpty()
@@ -25,7 +25,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   x => x.UpdatedAt,
                                                   DateTime.MinValue);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
 
                 Assert.Equal(Interop.MergeResult.Success, res);
             }
@@ -57,7 +57,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   x => x.UpdatedAt,
                                                   dt);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
 
                 var repo = new GenericRepository<SimpleBook>(localContext);
@@ -92,7 +92,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   x => x.UpdatedAt,
                                                   dt);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
 
                 var repo = new GenericRepository<SimpleBook>(localContext);
@@ -125,7 +125,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   x => x.UpdatedAt,
                                                   dt);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
 
                 var repo = new GenericRepository<SimpleBook>(localContext);
@@ -160,7 +160,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   x => x.UpdatedAt,
                                                   dt);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
             }
         }

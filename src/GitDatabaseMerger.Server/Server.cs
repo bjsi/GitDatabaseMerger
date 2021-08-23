@@ -7,20 +7,26 @@ using System.Threading.Tasks;
 using AustinHarris.JsonRpc;
 using GitDatabaseMerger.Interop;
 
-namespace GitDatabaseMerger
+namespace GitDatabaseMerger.Server
 {
-    public class MergeRequestListener : IDisposable
+    public class MergeRequestListener : JsonRpcService, IDisposable
     {
         private TcpListener Server { get; set; }
-        private MergeAPI MergeAPI { get; }
         private string Hostname { get; }
         private int Port { get; }
 
-        public MergeRequestListener(string hostname, int port, IMerger merger)
+        public EventHandler<MergeRequestEventArgs> OnMergeRequest;
+
+        public MergeRequestListener(string hostname, int port)
         {
             this.Hostname = hostname;
             this.Port = port;
-            this.MergeAPI = new MergeAPI(merger);
+        }
+
+        [JsonRpcMethod]
+        public void Merge(string local, string remote, string ancestor)
+        {
+            OnMergeRequest?.Invoke(this, new MergeRequestEventArgs(local, remote, ancestor));
         }
 
         public async Task StartAsync()

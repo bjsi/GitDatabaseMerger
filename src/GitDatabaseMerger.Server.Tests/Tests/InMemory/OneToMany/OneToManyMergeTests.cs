@@ -5,7 +5,7 @@ using Xunit;
 
 namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.OneToMany
 {
-    public class OneToManyMergeTests : MergeTestsBase
+    public class OneToManyMergeTests : InMemoryMergeTestsBase
     {
         [Fact]
         public async Task TestAllDbsAreEmpty()
@@ -21,7 +21,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.OneToMany
                                                   x => x.UpdatedAt,
                                                   DateTime.MinValue);
 
-                var res = await merger.Merge();
+                var res = await merger.MergeAsync();
 
                 Assert.Equal(Interop.MergeResult.Success, res);
             }

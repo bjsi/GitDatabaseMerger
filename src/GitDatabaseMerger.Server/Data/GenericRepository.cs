@@ -46,12 +46,11 @@ namespace GitDatabaseMerger.Server.Data
             }
         }
 
-        public async Task<bool> DeleteAsync(params object[] keys)
+        public async Task<bool> DeleteAsync(TEntity entity)
         {
             try
             {
-                var e = await _dbContext.FindAsync<TEntity>(keys);
-                _dbContext.Set<TEntity>().Remove(e);
+                _dbContext.Set<TEntity>().Remove(entity);
                 return (await _dbContext.SaveChangesAsync()) == 1;
             }
             catch (DbUpdateException)

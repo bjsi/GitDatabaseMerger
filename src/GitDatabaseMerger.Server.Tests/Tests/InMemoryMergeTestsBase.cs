@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace GitDatabaseMerger.Server.Tests.Tests
 {
-    public abstract class MergeTestsBase : IDisposable
+    public abstract class InMemoryMergeTestsBase : IDisposable
     {
 
         protected TestDbContextFactory LocalFactory { get; }
         protected TestDbContextFactory RemoteFactory { get; }
         protected TestDbContextFactory AncestorFactory { get; }
 
-        public MergeTestsBase()
+        public InMemoryMergeTestsBase()
         {
             LocalFactory = new TestDbContextFactory();
             RemoteFactory = new TestDbContextFactory();
             AncestorFactory = new TestDbContextFactory();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             LocalFactory.Dispose();
             RemoteFactory.Dispose();
