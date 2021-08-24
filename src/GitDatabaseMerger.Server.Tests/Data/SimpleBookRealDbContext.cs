@@ -6,6 +6,7 @@ namespace GitDatabaseMerger.Server.Tests.Data
     public class SimpleBookRealDbContext : DbContext
     {
         public DbSet<SimpleBook> Books { get; set; }
+        public DbSet<Conflict> Conflicts { get; set; }
         private string DatabasePath { get; }
 
         public SimpleBookRealDbContext(string databasePath)
@@ -21,6 +22,7 @@ namespace GitDatabaseMerger.Server.Tests.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<SimpleBook>().ToTable("Books");
+            modelBuilder.Entity<Conflict>().ToTable("Conflicts");
         }
     }
 }

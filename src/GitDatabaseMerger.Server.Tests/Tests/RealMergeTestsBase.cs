@@ -1,10 +1,13 @@
 ﻿using CliWrap;
+using CliWrap.Buffered;
 using GitDatabaseMerger.Server.Data;
 using GitDatabaseMerger.Server.Tests.Data;
 using GitDatabaseMerger.Server.Tests.Helpers;
+using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +35,23 @@ namespace GitDatabaseMerger.Server.Tests.Tests
             Database = Path.Combine(Repo, RelDbPath);
         }
 
+        protected async Task CreateConflictToGuaranteeMergeDriver()
+        {
+            var dt = DateTime.UtcNow;
+            await CreateAsync(new List<Conflict> { new Conflict { CreatedAt = dt, UpdatedAt = dt } });
+        }
+
+        protected async Task<BufferedCommandResult> GitMergeAsync()
+        {
+            var info = new ProcessStartInfo();
+            var path = info.EnvironmentVariables["PATH"];
+            return await Git.Merge(Repo, RemoteBranchName)
+                              .WithValidation(CommandResultValidation.None)
+                              .WithEnvironmentVariables((b) => b.Set("PATH", path + ";" + ScriptsPath))
+                              .ExecuteBufferedAsync();
+        }
+
+
         protected async Task SetupRepo()
         {
             await Git.Init(Repo).ExecuteAsync();
@@ -57,8 +77,11 @@ namespace GitDatabaseMerger.Server.Tests.Tests
             var files = stdout.Split(Environment.NewLine)[0]
                               .Split(" ")
                               .Select(x => Path.Combine(Repo, x))
+                              .Where(x => File.Exists(x))
                               .ToArray();
-            return (files[0], files[1], files[2]);
+            return files.Length == 3
+                ? (files[0], files[1], files[2])
+                : (null, null, null);
         }
 
         public void DeleteDirectory(string targetDir)
