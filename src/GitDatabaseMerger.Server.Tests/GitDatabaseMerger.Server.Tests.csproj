@@ -34,8 +34,4 @@
     <ProjectReference Include="..\GitDatabaseMerger.Server\GitDatabaseMerger.Server.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tests\InMemory\OneToOne\" />
-  </ItemGroup>
-
 </Project>

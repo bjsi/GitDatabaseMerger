@@ -19,7 +19,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.Real.Simple
     // For each fast-forward change (row added, row deleted, row changed), a method can be overridden in the Merger
     // to execute some code based on the added/deleted/changed row.
 
-    public class DefaultSimpleMergeTests : RealMergeTestsBase
+    public class FastForward : RealMergeTestsBase
     {
         [Fact]
         // The local database contains two books.
@@ -41,7 +41,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests.Real.Simple
             await CreateAndCommitAsync(localBooks);
 
             await Git.CreateBranchAndCheckout(Repo, RemoteBranch).ExecuteAsync();
-            await DeleteAsync(new List<SimpleBook> { book2 });
+            await DeleteAndCommitAsync(new List<SimpleBook> { book2 });
 
             await Git.CheckoutBranch(Repo, LocalBranch).ExecuteAsync();
 

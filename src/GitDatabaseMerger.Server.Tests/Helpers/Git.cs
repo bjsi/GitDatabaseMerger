@@ -15,6 +15,7 @@ namespace GitDatabaseMerger.Server.Tests.Helpers
         public static Command CanFastForward(string workingDir, string local, string remote)
         {
             return Cmd(workingDir)
+                .WithValidation(CommandResultValidation.None)
                 .WithArguments(new string[] { "merge-base", "--is-ancestor", local, remote });
         }
 

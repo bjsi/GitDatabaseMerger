@@ -107,7 +107,7 @@ namespace GitDatabaseMerger.Server.Tests.Tests
             DeleteDirectory(Repo);
         }
 
-        public async Task DeleteAsync<T>(List<T> list) where T : class
+        public async Task DeleteAndCommitAsync<T>(List<T> list) where T : class
         {
             using (var context = new SimpleBookRealDbContext(Database))
             {
