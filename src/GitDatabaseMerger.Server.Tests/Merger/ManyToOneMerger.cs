@@ -1,8 +1,10 @@
 ﻿using GitDatabaseMerger.Server.Merger;
+using GitDatabaseMerger.Server.Models;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace GitDatabaseMerger.Server.Tests.Merger
 {
@@ -13,8 +15,9 @@ namespace GitDatabaseMerger.Server.Tests.Merger
                                DbContext ancestor,
                                Func<BookWithAuthor, DateTime> getCreatedAt,
                                Func<BookWithAuthor, DateTime> getUpdatedAt,
-                               DateTime lastSuccessfulMerge)
-            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge)
+                               DateTime lastSuccessfulMerge,
+                               MergeType mergeType)
+            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge, mergeType)
         {
         }
 
@@ -24,5 +27,17 @@ namespace GitDatabaseMerger.Server.Tests.Merger
             nameof(BookWithAuthor.CreatedAt),
             nameof(BookWithAuthor.UpdatedAt),
         };
+
+        public override void FastForwardMergeAddedRow(BookWithAuthor row)
+        {
+        }
+
+        public override void FastForwardMergeChangedRow(BookWithAuthor from, BookWithAuthor to, IEnumerable<PropertyInfo> changedProperties)
+        {
+        }
+
+        public override void FastForwardMergeDeletedRow(BookWithAuthor row)
+        {
+        }
     }
 }

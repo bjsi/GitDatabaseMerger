@@ -1,5 +1,6 @@
 ﻿using GitDatabaseMerger.Interop;
 using GitDatabaseMerger.Server.Merger;
+using GitDatabaseMerger.Server.Models;
 using GitDatabaseMerger.Server.TestConsole.Data;
 using GitDatabaseMerger.Server.TestConsole.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +17,9 @@ namespace GitDatabaseMerger.Server.TestConsole
                                DbContext ancestor,
                                Func<MyTask, DateTime> getCreatedAt,
                                Func<MyTask, DateTime> getUpdatedAt,
-                               DateTime lastSuccessfulMerge)
-            : base(local, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge)
+                               DateTime lastSuccessfulMerge,
+                               MergeType mergeType)
+            : base(local, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge, mergeType)
         {
         }
 
@@ -40,7 +42,8 @@ namespace GitDatabaseMerger.Server.TestConsole
                                                   AncestorContext,
                                                   (x) => x.CreatedAt,
                                                   (x) => x.UpdatedAt,
-                                                  DateTime.MinValue);
+                                                  DateTime.MinValue,
+                                                  MergeType.FastForward); // TODO
 
             var success = await tableMerger.MergeAsync();
             return success;
@@ -57,7 +60,7 @@ namespace GitDatabaseMerger.Server.TestConsole
             var merger = new DBMerger();
             using (var listener = new MergeRequestListener(Hostname, Port))
             {
-                listener.OnMergeRequest += (_, args) => merger.MergeAsync(args.Local, args.Remote, args.Ancestor);
+                listener.OnMergeRequest += async (_, args) => await merger.MergeAsync(args.Local, args.Remote, args.Ancestor);
                 await listener.StartAsync();
             }
         }

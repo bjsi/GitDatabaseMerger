@@ -1,5 +1,6 @@
 ﻿using GitDatabaseMerger.Interop;
 using GitDatabaseMerger.Server.Data;
+using GitDatabaseMerger.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -30,12 +31,15 @@ namespace GitDatabaseMerger.Server.Merger
         private Func<TEntity, DateTime> GetUpdatedAt { get; }
         private DateTime LastSuccessfulMerge { get; }
 
+        private MergeType MergeType { get; }
+
         public TableMergerBase(DbContext localContext,
                                DbContext remote,
                                DbContext ancestor,
                                Func<TEntity, DateTime> getCreatedAt,
                                Func<TEntity, DateTime> getUpdatedAt,
-                               DateTime lastSuccessfulMerge)
+                               DateTime lastSuccessfulMerge,
+                               MergeType mergeType)
         {
             LocalContext = localContext;
             RemoteContext = remote;
@@ -46,15 +50,11 @@ namespace GitDatabaseMerger.Server.Merger
             RemoteDB = new GenericRepository<TEntity>(RemoteContext);
             AncestorDB = new GenericRepository<TEntity>(AncestorContext);
             LastSuccessfulMerge = lastSuccessfulMerge;
+            MergeType = mergeType;
         }
 
         public async Task<MergeResult> MergeAsync()
         {
-            // TODO: is this correct?
-            //await Task.WhenAll(LocalContext.Database.EnsureCreatedAsync(),
-            //                   RemoteContext.Database.EnsureCreatedAsync(),
-            //                   AncestorContext.Database.EnsureCreatedAsync());
-
             var mergeResults = new List<MergeResult>();
             var mergedPrimaryKeys = new KTrie.Trie<object, object[]>();
             foreach (var localRow in LocalDB.GetAll())
@@ -65,9 +65,10 @@ namespace GitDatabaseMerger.Server.Merger
                 var remoteRow = await remoteRowTask;
                 var ancestorRow = await ancestorRowTask;
                 var result = await CompareRows(localRow, remoteRow, ancestorRow);
+                mergeResults.Add(result);
+
                 if (remoteRow != null)
                     mergedPrimaryKeys.Add(localRowKey, localRowKey);
-                mergeResults.Add(result);
             }
 
             foreach (var remoteRow in RemoteDB.GetAll())
@@ -89,25 +90,64 @@ namespace GitDatabaseMerger.Server.Merger
                 : MergeResult.FailedWithUnresolvedConflict;
         }
 
+        private bool RowOnlyInRemote(TEntity localRow, TEntity remoteRow, TEntity ancestorRow)
+        {
+            return remoteRow != null && localRow == null && ancestorRow == null;
+        }
+
+        private bool RowNotInRemote(TEntity localRow, TEntity remoteRow, TEntity ancestorRow)
+        {
+            return localRow != null && ancestorRow != null && remoteRow == null;
+        }
+
+        private bool RowInAll(TEntity localRow, TEntity remoteRow, TEntity ancestorRow)
+        {
+            return (localRow != null && ancestorRow != null && remoteRow != null);
+        }
+
         private async Task<MergeResult> CompareRows(TEntity localRow, TEntity remoteRow, TEntity ancestorRow)
         {
             // Row exists in the remote DB, but does not exist in the ancestor or local DB
             // The row was created at a time > the last successful merge time.
-            if ((remoteRow != null && localRow == null && ancestorRow == null) && GetCreatedAt(remoteRow) > LastSuccessfulMerge)
+            if (RowOnlyInRemote(localRow, remoteRow, ancestorRow) && GetCreatedAt(remoteRow) > LastSuccessfulMerge)
             {
-                return await HandleAdded(remoteRow);
+                if (MergeType == MergeType.Conflict)
+                {
+                    return await HandleMergeConflictAddedRow(remoteRow);
+                }
+                else
+                {
+                    FastForwardMergeAddedRow(remoteRow);
+                    return MergeResult.Success;
+                }
             }
             // Row exists in the local and ancestor DBs, but does not exist in the remote DB.
-            else if (localRow != null && ancestorRow != null && remoteRow == null)
+            else if (RowNotInRemote(localRow, remoteRow, ancestorRow))
             {
-                return await HandleDeleted(localRow);
+                if (MergeType == MergeType.Conflict)
+                {
+                    return await HandleMergeConflictDeletedRow(localRow);
+                }
+                else
+                {
+                    FastForwardMergeDeletedRow(localRow);
+                    return MergeResult.Success;
+                }
             }
             // Row exists in all 3 DBs (local, remote, ancestor)
             // The remote row was updated at a time > the last successful merge time.
-            else if ((localRow != null && ancestorRow != null && remoteRow != null) && GetUpdatedAt(remoteRow) > LastSuccessfulMerge)
+            else if (RowInAll(localRow, remoteRow, ancestorRow) && GetUpdatedAt(remoteRow) > LastSuccessfulMerge)
             {
-                var propertyInfos = GetChangedProps(localRow, remoteRow);
-                return await HandleChanged(localRow, remoteRow, propertyInfos);
+                var changedProperties = GetChangedProperties(localRow, remoteRow);
+                if (MergeType == MergeType.Conflict)
+                {
+                    return await HandleMergeConflictChangedRow(localRow, remoteRow, changedProperties);
+                }
+                else
+                {
+                    FastForwardMergeChangedRow(localRow, remoteRow, changedProperties);
+                    return MergeResult.Success;
+                }
             }
             else
             {
@@ -115,10 +155,13 @@ namespace GitDatabaseMerger.Server.Merger
             }
         }
 
-        private IEnumerable<PropertyInfo> GetChangedProps(TEntity localRow, TEntity remoteRow)
+        private IEnumerable<PropertyInfo> GetChangedProperties(TEntity localRow, TEntity remoteRow)
         {
             var changed = new List<PropertyInfo>();
-            foreach (var prop in localRow.GetType().GetProperties().Where(x => !IgnoreChangedPropertyNames.Contains(x.Name)))
+            var properties = localRow.GetType()
+                                     .GetProperties()
+                                     .Where(x => !IgnoreChangedPropertyNames.Contains(x.Name));
+            foreach (var prop in properties)
             {
                 var localProp = prop.GetValue(localRow, null);
                 var remoteProp = prop.GetValue(remoteRow, null);
@@ -130,6 +173,10 @@ namespace GitDatabaseMerger.Server.Merger
             return changed;
         }
 
+        public virtual void FastForwardMergeAddedRow(TEntity row) { }
+        public virtual void FastForwardMergeDeletedRow(TEntity row) { }
+        public virtual void FastForwardMergeChangedRow(TEntity from, TEntity to, IEnumerable<PropertyInfo> changedProperties) { }
+
         /// <summary>
         /// Handle a row that was added to the remote database.
         /// The row exists in the remote DB, but does not exist in the ancestor or local DB.
@@ -137,7 +184,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Add the row to the local database.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleAdded(TEntity remoteRow)
+        public virtual async Task<MergeResult> HandleMergeConflictAddedRow(TEntity remoteRow)
         {
             return (await LocalDB.CreateAsync(remoteRow))
                 ? MergeResult.Success
@@ -150,7 +197,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Delete the row from the local database.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleDeleted(TEntity localRow)
+        public virtual async Task<MergeResult> HandleMergeConflictDeletedRow(TEntity localRow)
         {
             return (await LocalDB.DeleteAsync(localRow))
                 ? MergeResult.Success
@@ -165,7 +212,7 @@ namespace GitDatabaseMerger.Server.Merger
         /// Default behaviour: Merge the row that was updated most recently.
         /// </summary>
         /// <returns>MergeResult indicating whether the merge succeeded or failed.</returns>
-        public virtual async Task<MergeResult> HandleChanged(TEntity localRow, TEntity remoteRow, IEnumerable<PropertyInfo> propertyInfos)
+        public virtual async Task<MergeResult> HandleMergeConflictChangedRow(TEntity localRow, TEntity remoteRow, IEnumerable<PropertyInfo> propertyInfos)
         { 
             return (await LocalDB.UpdateAsync(GetUpdatedAt(localRow) > GetUpdatedAt(remoteRow) ? localRow : remoteRow))
                 ? MergeResult.Success

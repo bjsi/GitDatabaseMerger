@@ -11,41 +11,41 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
 {
     public class CustomSimpleMergeTests : InMemoryMergeTestsBase
     {
-        [Fact]
-        public async Task TestChangedRow()
-        {
-            var dt = DateTime.UtcNow;
-            var book1 = new SimpleBook() { Title = "Cool Book", CreatedAt = dt, UpdatedAt = dt };
-            var book2 = new SimpleBook() { Title = "Cool Book is Cool", CreatedAt = dt, UpdatedAt = dt.AddSeconds(5) };
+        //[Fact]
+        //public async Task TestChangedRow()
+        //{
+        //    var dt = DateTime.UtcNow;
+        //    var book1 = new SimpleBook() { Title = "Cool Book", CreatedAt = dt, UpdatedAt = dt };
+        //    var book2 = new SimpleBook() { Title = "Cool Book is Cool", CreatedAt = dt, UpdatedAt = dt.AddSeconds(5) };
 
-            var local = new List<SimpleBook> { book1 };
-            var remote = new List<SimpleBook> { book2 };
-            var ancestor = local;
+        //    var local = new List<SimpleBook> { book1 };
+        //    var remote = new List<SimpleBook> { book2 };
+        //    var ancestor = local;
 
-            await CreateDBsAsync(local, remote, ancestor);
+        //    await CreateDBsAsync(local, remote, ancestor);
 
-            using (var localContext = LocalFactory.CreateContext())
-            using (var remoteContext = RemoteFactory.CreateContext())
-            using (var ancestorContext = AncestorFactory.CreateContext())
-            {
-                var merger = new CustomSimpleMerger(localContext,
-                                                        remoteContext,
-                                                        ancestorContext,
-                                                        x => x.CreatedAt,
-                                                        x => x.UpdatedAt,
-                                                        dt);
+        //    using (var localContext = LocalFactory.CreateContext())
+        //    using (var remoteContext = RemoteFactory.CreateContext())
+        //    using (var ancestorContext = AncestorFactory.CreateContext())
+        //    {
+        //        var merger = new CustomSimpleMerger(localContext,
+        //                                                remoteContext,
+        //                                                ancestorContext,
+        //                                                x => x.CreatedAt,
+        //                                                x => x.UpdatedAt,
+        //                                                dt);
 
-                var res = await merger.MergeAsync();
-                Assert.Equal(Interop.MergeResult.Success, res);
+        //        var res = await merger.MergeAsync();
+        //        Assert.Equal(Interop.MergeResult.Success, res);
 
-                var repo = new GenericRepository<SimpleBook>(localContext);
-                var all = await repo.GetAll().ToListAsync();
-                Assert.Single(all);
+        //        var repo = new GenericRepository<SimpleBook>(localContext);
+        //        var all = await repo.GetAll().ToListAsync();
+        //        Assert.Single(all);
 
-                var fst = all[0];
-                Assert.Equal(book2.Title, fst.Title);
-            }
-        }
+        //        var fst = all[0];
+        //        Assert.Equal(book2.Title, fst.Title);
+        //    }
+        //}
 
     }
 }

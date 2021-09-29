@@ -20,8 +20,8 @@ namespace GitDatabaseMerger.Server.Tests.Tests
         protected string Repo { get; }
         protected string Database { get; }
         protected string RelDbPath { get; }
-        protected string LocalBranchName { get; }  = "localbranch";
-        protected string RemoteBranchName { get; } = "remotebranch";
+        protected string LocalBranch { get; }  = "localbranch";
+        protected string RemoteBranch { get; } = "remotebranch";
         private static string BaseDir { get; } = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         protected static string ScriptsPath { get; } = Path.Combine(BaseDir, "Scripts");
         protected static string ScriptName { get; } = "mergedriver.ps1";
@@ -38,16 +38,13 @@ namespace GitDatabaseMerger.Server.Tests.Tests
         protected async Task CreateConflictToGuaranteeMergeDriver()
         {
             var dt = DateTime.UtcNow;
-            await CreateAsync(new List<Conflict> { new Conflict { CreatedAt = dt, UpdatedAt = dt } });
+            await CreateAndCommitAsync(new List<Conflict> { new Conflict { CreatedAt = dt, UpdatedAt = dt } });
         }
 
         protected async Task<BufferedCommandResult> GitMergeAsync()
         {
-            var info = new ProcessStartInfo();
-            var path = info.EnvironmentVariables["PATH"];
-            return await Git.Merge(Repo, RemoteBranchName)
+            return await Git.Merge(Repo, RemoteBranch)
                               .WithValidation(CommandResultValidation.None)
-                              .WithEnvironmentVariables((b) => b.Set("PATH", path + ";" + ScriptsPath))
                               .ExecuteBufferedAsync();
         }
 
@@ -86,8 +83,6 @@ namespace GitDatabaseMerger.Server.Tests.Tests
 
         public void DeleteDirectory(string targetDir)
         {
-            // Directory.Delete wasn't working...
-
             File.SetAttributes(targetDir, FileAttributes.Normal);
 
             string[] files = Directory.GetFiles(targetDir);
@@ -125,7 +120,20 @@ namespace GitDatabaseMerger.Server.Tests.Tests
             await Git.Commit(Repo).ExecuteAsync();
         }
 
-        public async Task CreateAsync<T>(List<T> list) where T : class
+        public async Task UpdateAndCommitAsync<T>(List<T> list) where T : class
+        {
+            using (var context = new SimpleBookRealDbContext(Database))
+            {
+                context.Database.EnsureCreated();
+                var repo = new GenericRepository<T>(context);
+                foreach (var book in list)
+                    await repo.UpdateAsync(book);
+            }
+            await Git.AddAll(Repo).ExecuteAsync();
+            await Git.Commit(Repo).ExecuteAsync();
+        }
+
+        public async Task CreateAndCommitAsync<T>(List<T> list) where T : class
         {
             using (var context = new SimpleBookRealDbContext(Database))
             {

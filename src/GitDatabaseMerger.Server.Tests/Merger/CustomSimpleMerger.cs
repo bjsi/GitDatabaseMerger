@@ -1,5 +1,6 @@
 ﻿using GitDatabaseMerger.Interop;
 using GitDatabaseMerger.Server.Merger;
+using GitDatabaseMerger.Server.Models;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -16,8 +17,9 @@ namespace GitDatabaseMerger.Server.Tests.Merger
                                       DbContext ancestor,
                                       Func<SimpleBook, DateTime> getCreatedAt,
                                       Func<SimpleBook, DateTime> getUpdatedAt,
-                                      DateTime lastSuccessfulMerge)
-            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge)
+                                      DateTime lastSuccessfulMerge,
+                                      MergeType mergeType)
+            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge, mergeType)
         {
         }
 
@@ -27,7 +29,7 @@ namespace GitDatabaseMerger.Server.Tests.Merger
             nameof(SimpleBook.UpdatedAt),
         };
 
-        public override async Task<MergeResult> HandleChanged(SimpleBook localRow, SimpleBook remoteRow, IEnumerable<PropertyInfo> propertyInfos)
+        public override async Task<MergeResult> HandleMergeConflictChangedRow(SimpleBook localRow, SimpleBook remoteRow, IEnumerable<PropertyInfo> propertyInfos)
         {
             foreach (var prop in propertyInfos)
             {

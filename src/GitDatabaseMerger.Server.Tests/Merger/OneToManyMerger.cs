@@ -1,4 +1,5 @@
 ﻿using GitDatabaseMerger.Server.Merger;
+using GitDatabaseMerger.Server.Models;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,8 +14,9 @@ namespace GitDatabaseMerger.Server.Tests.Merger
                                DbContext ancestor,
                                Func<AuthorWithBooks, DateTime> getCreatedAt,
                                Func<AuthorWithBooks, DateTime> getUpdatedAt,
-                               DateTime lastSuccessfulMerge)
-            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge)
+                               DateTime lastSuccessfulMerge,
+                               MergeType mergeType)
+            : base(localContext, remote, ancestor, getCreatedAt, getUpdatedAt, lastSuccessfulMerge, mergeType)
         {
         }
 

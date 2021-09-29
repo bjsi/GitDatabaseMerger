@@ -12,6 +12,12 @@ namespace GitDatabaseMerger.Server.Tests.Helpers
                 .WithWorkingDirectory(workingDir);
         }
 
+        public static Command CanFastForward(string workingDir, string local, string remote)
+        {
+            return Cmd(workingDir)
+                .WithArguments(new string[] { "merge-base", "--is-ancestor", local, remote });
+        }
+
         public static Command CheckoutBranch(string workingDir, string branch)
         {
             return Cmd(workingDir)

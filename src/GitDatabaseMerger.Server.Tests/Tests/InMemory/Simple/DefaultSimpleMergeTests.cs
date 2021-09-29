@@ -1,4 +1,5 @@
 ﻿using GitDatabaseMerger.Server.Data;
+using GitDatabaseMerger.Server.Models;
 using GitDatabaseMerger.Server.Tests.Merger;
 using GitDatabaseMerger.Server.Tests.Models;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,12 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
                 var merger = new SimpleMerger(localContext,
-                                                  remoteContext,
-                                                  ancestorContext,
-                                                  x => x.CreatedAt,
-                                                  x => x.UpdatedAt,
-                                                  DateTime.MinValue);
+                                              remoteContext,
+                                              ancestorContext,
+                                              x => x.CreatedAt,
+                                              x => x.UpdatedAt,
+                                              DateTime.MinValue,
+                                              MergeType.FastForward);
 
                 var res = await merger.MergeAsync();
 
@@ -51,11 +53,12 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
             using (var ancestorContext = AncestorFactory.CreateContext())
             {
                 var merger = new SimpleMerger(localContext,
-                                                  remoteContext,
-                                                  ancestorContext,
-                                                  x => x.CreatedAt,
-                                                  x => x.UpdatedAt,
-                                                  dt);
+                                              remoteContext,
+                                              ancestorContext,
+                                              x => x.CreatedAt,
+                                              x => x.UpdatedAt,
+                                              dt,
+                                              MergeType.FastForward); // TODO
 
                 var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
@@ -90,7 +93,8 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   ancestorContext,
                                                   x => x.CreatedAt,
                                                   x => x.UpdatedAt,
-                                                  dt);
+                                                  dt,
+                                                  MergeType.FastForward); // TODO
 
                 var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
@@ -123,7 +127,9 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   ancestorContext,
                                                   x => x.CreatedAt,
                                                   x => x.UpdatedAt,
-                                                  dt);
+                                                  dt,
+                                                  MergeType.FastForward);
+
 
                 var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
@@ -158,7 +164,8 @@ namespace GitDatabaseMerger.Server.Tests.Tests.InMemory.Simple
                                                   ancestorContext,
                                                   x => x.CreatedAt,
                                                   x => x.UpdatedAt,
-                                                  dt);
+                                                  dt,
+                                                  MergeType.FastForward);
 
                 var res = await merger.MergeAsync();
                 Assert.Equal(Interop.MergeResult.Success, res);
